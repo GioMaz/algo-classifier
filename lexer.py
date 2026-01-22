@@ -33,8 +33,10 @@ Token = Enum("Token", [
         "MOD",          # %
         "LT",           # <
         "LE",           # <=
+        "LSHIFT",       # <<
         "GT",           # >
         "GE",           # >=
+        "RSHIFT",       # >>
         "EQ",           # ==
         "NE",           # !=
         "LAND",         # &
@@ -84,6 +86,10 @@ Token = Enum("Token", [
         "NUMBER",       # 123
         "STRING",       # "abc"
         "CHAR",         # 'a'
+        "NULL",         # NULL
+        "STDIN",        # stdin
+        "STDOUT",       # stdout
+        "STDERR",       # stderr
 
         "IDENTIFIER",   # abc
         "UNEXPECTED",   # ???
@@ -121,6 +127,12 @@ keywords: dict[str, Token] = {
     "strlen":   Token.STRLEN,
     "printf":   Token.PRINTF,
     "fprintf":  Token.FPRINTF,
+
+    # Literals
+    "NULL":     Token.NULL,
+    "stdin":    Token.STDIN,
+    "stdout":   Token.STDOUT,
+    "stderr":   Token.STDERR,
 }
 
 def is_number(c: chr) -> bool:
@@ -261,18 +273,26 @@ class Lexer:
                         token = Token.MOD
 
                 case "<":
-                    if self.__peek_next() == "=":
-                        self.i += 1
-                        token = Token.LE
-                    else:
-                        token = Token.LT
+                    match self.__peek_next():
+                        case "=":
+                            self.i += 1
+                            token = Token.LE
+                        case "<":
+                            self.i += 1
+                            token = Token.LSHIFT
+                        case _:
+                            token = Token.LT
 
                 case ">":
-                    if self.__peek_next() == "=":
-                        self.i += 1
-                        token = Token.GE
-                    else:
-                        token = Token.GT
+                    match self.__peek_next():
+                        case "=":
+                            self.i += 1
+                            token = Token.GE
+                        case ">":
+                            self.i += 1
+                            token = Token.RSHIFT
+                        case _:
+                            token = Token.GT
 
                 case "=":
                     if self.__peek_next() == "=":

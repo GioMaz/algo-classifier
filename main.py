@@ -143,6 +143,8 @@ print(cosine_similarity(vecs["bubble_sort.c"], vectorize(s)))
 """
 ### Relevant features
 
+The following vector requires a parsing step
+
 - Addition count (++, +=, +)
 - Subtraction count (--, -=, -)
 - Multiplication count (*, *=)
