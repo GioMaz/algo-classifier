@@ -139,35 +139,3 @@ for p1, v1 in vecs.items():
 print(vecs["bubble_sort.c"], "\n", vectorize(s))
 print(euclidean_distance(vecs["bubble_sort.c"], vectorize(s)))
 print(cosine_similarity(vecs["bubble_sort.c"], vectorize(s)))
-
-"""
-### Relevant features
-
-The following vector requires a parsing step
-
-- Addition count (++, +=, +)
-- Subtraction count (--, -=, -)
-- Multiplication count (*, *=)
-- Division count (/, /=)
-- Inequality count (<, <=, >, >=)
-- Equality count (==, !=)
-- Dereference count (*...)
-- Allocation count (malloc(), calloc())
-- Array count ([])
-- String count (char *)
-- Discrete count (int, unsigned, short, long)
-- Continuous count (float, double)
-- 1-ary cycle count (for (...) {...})
-- 2-ary cycle count (for (...) for (...) {...})
-- 3-ary cycle count (for (...) for (...) for (...) {...})
-- ...
-- Conditions count (if (...) {}, ... ? ... : ...)
-- 1-ary recursion count (int f() {... f() ... })
-- 2-ary recursion count (int f() {... f() ... f() ... })
-- 3-ary recursion count (int f() {... f() ... f() ... f() ...})
-- ...
-- Library 1
-- Library 2
-- Library 3
-- ...
-"""
