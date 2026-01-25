@@ -158,7 +158,7 @@ def is_whitespace(c: str) -> bool:
     return c in [" ", "\t", "\n"]
 
 def is_type(token: Token) -> bool:
-    return token.value >= Token.CHAR_T.value and token.value <= Token.VOID_T.value
+    return token.value >= Token.VOID_T.value and token.value <= Token.BOOL_T.value
 
 class Lexer:
     def __init__(self, s: str):
