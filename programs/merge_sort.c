@@ -1,4 +1,4 @@
-// #include <stdlib.h>
+#include <stdlib.h>
 
 static void merge(int a[], int l, int m, int r) {
     int n1 = m - l + 1;

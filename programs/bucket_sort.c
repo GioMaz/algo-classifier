@@ -1,4 +1,4 @@
-// #include <stdlib.h>
+#include <stdlib.h>
 
 void bucket_sort(int a[], int n, int max) {
     int **buckets = calloc(n, sizeof(int *));

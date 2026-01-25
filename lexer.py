@@ -1,4 +1,4 @@
-from enum import Enum
+from enum import Enum, auto
 
 Token = Enum("Token", [
         # Parentheses
@@ -29,6 +29,7 @@ Token = Enum("Token", [
         "ADD",          # +
         "MUL",          # *
         "SUB",          # -
+        "ARROW",        # ->
         "DIV",          # /
         "MOD",          # %
         "LT",           # <
@@ -61,17 +62,20 @@ Token = Enum("Token", [
         "SIZEOF",       # sizeof
         "STATIC",       # static
         "CONST",        # const
+        "TYPEDEF",      # typedef
+        "STRUCT",       # struct
 
         # Types
-        "CHAR_T",       # char
-        "BOOL_T",       # bool
-        "INT_T",        # int
-        "UNSIGNED_T",   # unsigned
-        "LONG_T",       # long
-        "SHORT_T",      # short
-        "DOUBLE_T",     # double
-        "FLOAT_T",      # float
         "VOID_T",       # void
+        "CHAR_T",       # char
+        "SHORT_T",      # short
+        "INT_T",        # int
+        "LONG_T",       # long
+        "FLOAT_T",      # float
+        "DOUBLE_T",     # double
+        "SIGNED_T",     # signed
+        "UNSIGNED_T",   # unsigned
+        "BOOL_T",       # bool
 
         # Notable functions
         "MALLOC",       # malloc
@@ -107,17 +111,20 @@ keywords: dict[str, Token] = {
     "sizeof":   Token.SIZEOF,
     "static":   Token.STATIC,
     "const":    Token.CONST,
+    "typedef":  Token.TYPEDEF,
+    "struct":   Token.STRUCT,
 
     # Types
-    "char":     Token.CHAR_T,
-    "bool":     Token.BOOL_T,
-    "int":      Token.INT_T,
-    "unsigned": Token.UNSIGNED_T,
-    "long":     Token.LONG_T,
-    "short":    Token.SHORT_T,
-    "double":   Token.DOUBLE_T,
-    "float":    Token.FLOAT_T,
     "void":     Token.VOID_T,
+    "char":     Token.CHAR_T,
+    "short":    Token.SHORT_T,
+    "int":      Token.INT_T,
+    "long":     Token.LONG_T,
+    "float":    Token.FLOAT_T,
+    "double":   Token.DOUBLE_T,
+    "signed":   Token.SIGNED_T,
+    "unsigned": Token.UNSIGNED_T,
+    "bool":     Token.BOOL_T,
 
     # Notable functions
     "malloc":   Token.MALLOC,
@@ -135,20 +142,23 @@ keywords: dict[str, Token] = {
     "stderr":   Token.STDERR,
 }
 
-def is_number(c: chr) -> bool:
+def is_number(c: str) -> bool:
     return ord(c) >= ord("0") and ord(c) <= ord("9")
 
-def is_alpha(c: chr) -> bool:
+def is_alpha(c: str) -> bool:
     c1 = c == "_"
     c2 = ord(c) >= ord("a") and ord(c) <= ord("z")
     c3 = ord(c) >= ord("A") and ord(c) <= ord("Z")
     return c1 or c2 or c3
 
-def is_alphanumeric(c: chr) -> bool:
+def is_alphanumeric(c: str) -> bool:
     return is_alpha(c) or is_number(c)
 
-def is_whitespace(c: chr) -> bool:
+def is_whitespace(c: str) -> bool:
     return c in [" ", "\t", "\n"]
+
+def is_type(token: Token) -> bool:
+    return token.value >= Token.CHAR_T.value and token.value <= Token.VOID_T.value
 
 class Lexer:
     def __init__(self, s: str):
@@ -160,13 +170,30 @@ class Lexer:
         while self.s[self.i] != "\n":
             self.i += 1
 
+    def consume_line(self) -> str:
+        s = ""
+        while self.s[self.i] != "\n":
+            s += self.s[self.i]
+            self.i += 1
+        return s
+
     def consume_whitespace(self):
         while is_whitespace(self.__peek()):
             self.i += 1
 
     def consume_number(self):
-        while is_number(self.__peek()):
+        while True:
+            c = self.__peek()
+            if c == "" or not is_number(c): break
             self.i += 1
+
+        if self.__peek() == "e":
+            self.i += 1
+            while True:
+                c = self.__peek()
+                if c == "" or not is_number(c): break
+                self.i += 1
+
         self.i -= 1
 
     def consume_alphanumeric(self) -> str:
@@ -189,10 +216,10 @@ class Lexer:
             if self.s[self.i] == "\\": self.i += 2
             else: self.i += 1
 
-    def __peek(self) -> chr:
+    def __peek(self) -> str:
         return self.s[self.i] if self.i < len(self.s) else ""
 
-    def __peek_next(self) -> chr:
+    def __peek_next(self) -> str:
         return self.s[self.i+1] if self.i+1 < len(self.s) else ""
 
     def peek(self) -> Token:
@@ -252,6 +279,9 @@ class Lexer:
                         case "=":
                             self.i += 1
                             token = Token.SUBASSIGN
+                        case ">":
+                            self.i += 1
+                            token = Token.ARROW
                         case _:
                             token = Token.SUB
 
@@ -341,6 +371,10 @@ class Lexer:
                     self.consume_char()
                     token = Token.CHAR
 
+                # TODO: handle preprocessor commands
+                case "#":
+                    _ = self.consume_line()
+
                 case "":
                     token = Token.EOF
 
@@ -353,7 +387,7 @@ class Lexer:
                         if s in keywords: token = keywords[s]
                         else: token = Token.IDENTIFIER
                     else:
-                        raise Exception("Unexpected token:", self.s[self.i])
+                        raise Exception("Unexpected:", self.s[self.i])
 
             self.i += 1
 

@@ -1,4 +1,6 @@
 from lexer import Lexer, Token
+from parser import FunctionParser
+from functools import singledispatch
 import numpy as np
 
 programs_dir = "programs"
@@ -24,7 +26,7 @@ def read_program(program: str) -> str:
     file.close()
     return s
 
-def tokenize(program: str) -> [Token]:
+def tokenize(program: str) -> list[Token]:
     tokens = []
     lexer = Lexer(program)
     while True:
@@ -34,9 +36,21 @@ def tokenize(program: str) -> [Token]:
         tokens.append(token)
     return tokens
 
-def vectorize(program: str) -> np.ndarray:
+@singledispatch
+def vectorize(arg):
+    raise NotImplementedError
+
+@vectorize.register
+def _(program: str) -> np.ndarray:
     vec = np.zeros(len(Token))
     for token in tokenize(program):
+        vec[token.value] += 1
+    return vec
+
+@vectorize.register
+def _(tokens: list) -> np.ndarray:
+    vec = np.zeros(len(Token))
+    for token in tokens:
         vec[token.value] += 1
     return vec
 
@@ -44,15 +58,17 @@ def cosine_similarity(x: np.ndarray, y: np.ndarray) -> float:
     return np.dot(x, y) / (np.linalg.norm(x) * np.linalg.norm(y))
 
 def euclidean_distance(x: np.ndarray, y: np.ndarray) -> float:
-    return np.linalg.norm(x - y)
+    return float(np.linalg.norm(x - y))
 
 s = """
 // #include <stdio.h>
 // #include <stdlib.h>
 // #include <string.h>
 // #include <errno.h>
+//
+// 1e12 + 3
 
-static void print_usage(const char *prog) {
+void print_usage(const char *prog) {
     printf(
         "Usage: %s <command> <a> <b>\\n"
         "\\n"
@@ -123,19 +139,22 @@ int main(int argc, char *argv[]) {
 }
 """
 
-vecs = {}
-for program in programs:
-    src = read_program(program)
-    vec = vectorize(src)
-    vecs[program] = vec
+print(FunctionParser(Lexer(s)).parse_fundefs())
+print(list(map(vectorize, FunctionParser(Lexer(s)).parse_fundefs())))
 
-for p1, v1 in vecs.items():
-    for p2, v2 in vecs.items():
-        print(p1, p2,
-              "\t", cosine_similarity(v1, v2),
-              "\t", euclidean_distance(v1, v2))
+# vecs = {}
+# for program in programs:
+#     src = read_program(program)
+#     vec = vectorize(src)
+#     vecs[program] = vec
 
+# for p1, v1 in vecs.items():
+#     for p2, v2 in vecs.items():
+#         print(p1, p2,
+#               "\t", cosine_similarity(v1, v2),
+#               "\t", euclidean_distance(v1, v2))
+
+# print(vecs["bubble_sort.c"])
+# print(vectorize(s))
+# print(euclidean_distance(vecs["bubble_sort.c"], vectorize(s)))
 # print(cosine_similarity(vecs["bubble_sort.c"], vectorize(s)))
-print(vecs["bubble_sort.c"], "\n", vectorize(s))
-print(euclidean_distance(vecs["bubble_sort.c"], vectorize(s)))
-print(cosine_similarity(vecs["bubble_sort.c"], vectorize(s)))

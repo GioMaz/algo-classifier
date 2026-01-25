@@ -1,4 +1,4 @@
-// #include <string.h>
+#include <string.h>
 
 void counting_sort(int a[], int n, int max) {
     int count[max + 1];
